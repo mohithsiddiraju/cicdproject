@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: tuneup_db
+    environment:
+      MYSQL_ROOT_PASSWORD: Mohith@2006
+      MYSQL_DATABASE: tuneup
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: tuneup_backend
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/tuneup
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=Mohith@2006
+      - SERVER_PORT=8080
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8085:8080"   # host:container (host 8085 → container 8080)
+    command: sh -c "sleep 8 && java -jar /app/backend.jar"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Browser must call the backend via host port 8085 now
+        VITE_BASE_API_URL: "http://localhost:8085"
+    container_name: tuneup_frontend
+    depends_on:
+      - backend
+    ports:
+      - "3001:80"
+
+volumes:
+  db_data:
