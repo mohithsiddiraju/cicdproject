@@ -27,10 +27,10 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy') {
+                stage('Build & Deploy') {
             steps {
                 sh '''
-                docker compose down -v
+                docker compose down -v || true
                 docker compose build
                 docker compose up -d
                 '''
