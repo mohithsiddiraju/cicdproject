@@ -2,54 +2,38 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_COMPOSE_FILE = 'docker-compose.yml'
-        IMAGE_TAG = "latest"
+        MYSQL_ROOT_PASSWORD = credentials('mysql-root-password')
+        SPRING_DATASOURCE_PASSWORD = credentials('mysql-root-password')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/mohithsiddiraju/cicdproject.git'
+                git branch: 'master', url: 'https://github.com/mohithsiddiraju/cicdproject.git'
             }
         }
 
-        stage('Backend Build') {
+        stage('Prepare .env') {
             steps {
-                dir('backend') {
-                    sh 'mvn clean package -DskipTests'
-                }
+                sh '''
+                cat > .env <<EOF
+                MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+                MYSQL_DATABASE=tuneup
+                SPRING_DATASOURCE_USERNAME=root
+                SPRING_DATASOURCE_PASSWORD=$SPRING_DATASOURCE_PASSWORD
+                SERVER_PORT=8080
+                EOF
+                '''
             }
         }
 
-        stage('Frontend Build') {
+        stage('Build & Deploy') {
             steps {
-                dir('frontend') {
-                    sh 'npm install'
-                    sh 'npm run build'
-                }
+                sh '''
+                docker compose down -v
+                docker compose up --build -d
+                '''
             }
-        }
-
-        stage('Docker Compose Build') {
-            steps {
-                sh "docker compose -f ${DOCKER_COMPOSE_FILE} build"
-            }
-        }
-
-        stage('Deploy Containers') {
-            steps {
-                sh "docker compose -f ${DOCKER_COMPOSE_FILE} down"
-                sh "docker compose -f ${DOCKER_COMPOSE_FILE} up -d"
-            }
-        }
-    }
-
-    post {
-        success {
-            echo '✅ Deployment successful!'
-        }
-        failure {
-            echo '❌ Deployment failed. Check logs.'
         }
     }
 }
