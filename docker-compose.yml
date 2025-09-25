@@ -26,22 +26,22 @@ services:
     depends_on:
       - db
     ports:
-      - "8085:8080"   # backend exposed on host: 8085
+      - "8085:8080"   # host:container → backend on 8085
     networks:
       - app-network
 
   frontend:
-  build: ./frontend
-  container_name: frontend_service
-  restart: always
-  ports:
-    - "3001:80"
-  depends_on:
-    - backend
-  environment:
-    - REACT_APP_API_URL=http://backend:8085
-  networks:
-    - app-network
+    build: ./frontend
+    container_name: frontend_service
+    restart: always
+    ports:
+      - "3001:80"   # host:container → frontend on 3001
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://backend:8085
+    networks:
+      - app-network
 
 volumes:
   db_data:
