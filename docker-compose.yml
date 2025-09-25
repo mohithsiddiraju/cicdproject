@@ -31,17 +31,17 @@ services:
       - app-network
 
   frontend:
-    build: ./frontend
-    container_name: frontend_service
-    restart: always
-    ports:
-      - "3001:3000"   # frontend exposed on host: 3001
-    depends_on:
-      - backend
-    environment:
-      - REACT_APP_API_URL=http://backend:8080   # ✅ fixed to container port
-    networks:
-      - app-network
+  build: ./frontend
+  container_name: frontend_service
+  restart: always
+  ports:
+    - "3001:80"
+  depends_on:
+    - backend
+  environment:
+    - REACT_APP_API_URL=http://backend:8085
+  networks:
+    - app-network
 
 volumes:
   db_data:
